@@ -120,6 +120,7 @@ export default function Productdetails({ product }: { product: productItems }) {
                     imgLoaded ? 'opacity-100' : 'opacity-0'
                   }`}
                   priority
+                  
                   onLoad={() => setImgLoaded(true)}
                   onError={() => setImgLoaded(true)}
                 />
