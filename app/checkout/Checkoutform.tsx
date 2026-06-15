@@ -11,7 +11,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { CheckoutFormValues, checkoutSchema } from '@/schema/order';
 import { orderProcess } from '@/server/controllers/order';
-import { PaymentMethod } from '@prisma/client';
+
 import AppError, { globalErrorMessage } from '@/server/responce/error';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
@@ -21,6 +21,7 @@ import { useAuthStore } from '@/hook/auth';
 import { useNotificationStore } from '@/hook/notification';
 import Link from 'next/link';
 import { formatPrice } from '@/utils';
+
 
 export default function BetterCheckout() {
   const cartStore = useCartStore();
@@ -77,7 +78,7 @@ export default function BetterCheckout() {
         },
         OrderItems: [...items],
         address: addresses,
-        Payment: { paymentMethod: data.payment as PaymentMethod },
+        Payment: { paymentMethod: data.payment as paymentMethod },
       })) as {
         status: number;
         message: string;
@@ -111,6 +112,9 @@ export default function BetterCheckout() {
       toast.error(errMsg);
     }
   };
+
+
+  type paymentMethod = 'CASH_ON_DELIVERY' | 'BKASH' | 'MAZAPAY';
 
   if (items.length === 0) {
     return (
@@ -253,7 +257,7 @@ export default function BetterCheckout() {
                   leftBadge={method === 'BKASH' ? 'Recommended' : undefined}
                   checked={payment === method}
                   onChange={() =>
-                    setValue('payment', method as PaymentMethod, {
+                    setValue('payment', method  as paymentMethod, {
                       shouldDirty: true,
                       shouldValidate: true,
                     })
