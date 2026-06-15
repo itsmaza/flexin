@@ -12,7 +12,7 @@ import Link from 'next/link';
 import { getEstimatedDelivery } from '@/utils/algorithm';
 import { getorderDatawithOrderId } from '@/server/controllers/order';
 import { useEffect, useState } from 'react';
-import { OrderStatus, PaymentMethod, PaymentStatus } from '@prisma/client';
+import {  PaymentMethod, PaymentStatus } from '@prisma/client';
 import { useParams } from 'next/navigation';
 import { useAuthStore } from '@/hook/auth';
 import AppError from '@/server/responce/error';
@@ -29,7 +29,7 @@ export type OrderData = {
   createdAt?: string;
   total: number;
   currency?: string;
-  status: OrderStatus;
+  status: string;
   Payments: PaymentInfo;
   estimatedDelivery?: string;
 };
