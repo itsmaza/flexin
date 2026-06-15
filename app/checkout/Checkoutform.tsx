@@ -60,9 +60,15 @@ export default function BetterCheckout() {
 
   const onSubmit = async (data: CheckoutFormValues) => {
     try {
+
+    
       if (Object.values(addresses).includes(''))
         throw new AppError({ message: 'Invalid address' });
-
+      // intregrate mazapay api
+      if(data.payment=="MAZAPAY"){
+        alert("ami asi")
+      }
+  
       const addOrder = (await orderProcess({
         userInfo: {
           email: userInfo?.email || '',
@@ -99,6 +105,7 @@ export default function BetterCheckout() {
 
       //clear cart
       cartStore.clearCart();
+    
     } catch (error) {
       const errMsg = globalErrorMessage(error);
       toast.error(errMsg);

@@ -1,5 +1,5 @@
 import ProductCard from '../products/__sub/ProductCard';
-import TopsmallInfo from '../__global_components/TopsmallInfo';
+
 import { productItems } from '@/types/product';
 import TopInfo from '../__global_components/TopInfo';
 

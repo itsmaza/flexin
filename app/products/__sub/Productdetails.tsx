@@ -13,7 +13,7 @@ import {
   Plus,
   Ruler,
   ShoppingBasket,
-  Star,
+  Sparkles,
   Truck,
 } from 'lucide-react';
 import Image from 'next/image';
@@ -38,6 +38,7 @@ export default function Productdetails({ product }: { product: productItems }) {
     slug,
   } = product;
 
+
   const wishStore = useWishStore();
   const cartStore = useCartStore();
   const isAlreadyInCart = cartStore.cart.find((item) => item.id === id);
@@ -57,23 +58,17 @@ export default function Productdetails({ product }: { product: productItems }) {
 
   const [selectedColor, setSelectedColor] = useState<string>('');
   const [selectedSize, setSelectedSize] = useState<string>('');
-  const [qty] = useState<number>(1);
+  const [qty, setQty] = useState<number>(1);
   const [imgLoaded, setImgLoaded] = useState(false);
 
-  useEffect(() => {
-    if (isAlreadyInCart) {
-      if (isAlreadyInCart.color) setSelectedColor(isAlreadyInCart.color);
-      if (isAlreadyInCart.size) setSelectedSize(isAlreadyInCart.size);
-    }
-  }, [isAlreadyInCart]);
-
-  // Default select first color/size on mount
+  // Initialize variant selection: prefer what's already in cart, otherwise default to first option.
   useEffect(() => {
     const firstColor = attributes?.find((attr) => attr.key === 'color')?.value;
     const firstSize = attributes?.find((attr) => attr.key === 'size')?.value;
-    if (firstColor) setSelectedColor(firstColor);
-    if (firstSize) setSelectedSize(firstSize);
-  }, [attributes]);
+
+    setSelectedColor(isAlreadyInCart?.color || firstColor || '');
+    setSelectedSize(isAlreadyInCart?.size || firstSize || '');
+  }, [attributes, isAlreadyInCart]);
 
   const variantMissing =
     (hasColors && !selectedColor) || (hasSizes && !selectedSize);
@@ -102,27 +97,31 @@ export default function Productdetails({ product }: { product: productItems }) {
 
   const handleDecrementCart = () => cartStore.decrement(id);
 
+  const handleQtyDecrement = () => setQty((q) => Math.max(1, q - 1));
+  const handleQtyIncrement = () =>
+    setQty((q) => (q >= stock ? q : q + 1));
+
   return (
     <div className="container mx-auto p-4 md:p-8">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-start">
         {/* Left: Media */}
         <div className="flex justify-center md:justify-start">
-          <div className="rounded-2xl overflow-hidden p-4 bg-white">
-            <div className="relative md:h-[480px] md:w-[480px]">
+          <div className="rounded-2xl overflow-hidden p-4 bg-white border border-gray-100 w-full md:w-auto">
+            <div className="relative h-[320px] sm:h-[400px] md:h-[480px] md:w-[480px] mx-auto">
               {!imgLoaded && (
                 <Skeleton className="absolute inset-0 rounded-xl" />
               )}
               <Lens lensSize={200} zoomFactor={2} duration={0.2}>
                 <Image
-                  src={imageUrl || '/placeholder.png'}
+                  src={imageUrl }
                   alt={name}
-                  width={480}
-                  height={480}
-                  className={`rounded-xl object-contain transition-transform duration-300 hover:scale-105 ${
+                  fill
+                  className={`rounded-xl object-contain transition-opacity duration-300 ${
                     imgLoaded ? 'opacity-100' : 'opacity-0'
                   }`}
                   priority
-                  onLoadingComplete={() => setImgLoaded(true)}
+                  onLoad={() => setImgLoaded(true)}
+                  onError={() => setImgLoaded(true)}
                 />
               </Lens>
             </div>
@@ -132,10 +131,24 @@ export default function Productdetails({ product }: { product: productItems }) {
         {/* Right: Details */}
         <div className="flex flex-col gap-5">
           {/* Meta */}
-          <div className="text-xs text-gray-500">
-            <span className="capitalize">{category?.name}</span>
-            <span className="mx-2">•</span>
-            <span>SKU: {id.slice(0, 8).toUpperCase()}</span>
+          <div className="flex items-center justify-between gap-3">
+            <div className="text-xs text-gray-500">
+              <span className="capitalize">{category?.name}</span>
+              <span className="mx-2">•</span>
+              <span>SKU: {id.slice(0, 8).toUpperCase()}</span>
+            </div>
+
+            {/* QR */}
+            <div className="hidden lg:flex flex-col items-center gap-1">
+              <div className="p-1.5 bg-white border border-gray-100 rounded-md">
+                <QRCode
+                  size={56}
+                  value={`${appConfig.hostname.BASE_URL}/products/${slug}`}
+                  viewBox="0 0 256 256"
+                />
+              </div>
+              <span className="text-[11px] text-gray-400">Scan to view</span>
+            </div>
           </div>
 
           {/* Title */}
@@ -143,37 +156,19 @@ export default function Productdetails({ product }: { product: productItems }) {
             {name}
           </h1>
 
-          <div className="md:flex items-center justify-between md:w-3/4">
-            <div>
-              {/* Rating (placeholder) */}
-              <div className="flex items-center gap-1 text-sm text-gray-600 mb-2">
-                <Star className="w-4 h-4 fill-purple-400 stroke-purple-400" />
-                <Star className="w-4 h-4 fill-amber-400 stroke-amber-400" />
-                <Star className="w-4 h-4 fill-red-400 stroke-red-400" />
-                <Star className="w-4 h-4 fill-blue-400 stroke-blue-400" />
-                <Star className="w-4 h-4 stroke-yellow-400" />
-                <span className="ml-1">(Maximum positive reviews)</span>
-              </div>
+          {/* Highlight badge */}
+          <span className="inline-flex items-center gap-1.5 text-xs font-medium text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-full w-fit">
+            <Sparkles className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
+            Trending pick this week
+          </span>
 
-              {/* Description (safe) */}
-              <p className="text-gray-600 leading-relaxed">
-                {description?.slice(0, DESCRIPTION_LEN_MAX) ??
-                  'No description available.'}
-              </p>
-            </div>
-
-            {/* QR */}
-            <div>
-              <div className="my-3 hidden lg:block float-end text-center">
-                <QRCode
-                  size={60}
-                  value={`${appConfig.hostname.BASE_URL}/products/${slug}`}
-                  viewBox="0 0 256 256"
-                />
-                <span className="text-xs">Scan now</span>
-              </div>
-            </div>
-          </div>
+          {/* Description */}
+          <p className="text-gray-600 leading-relaxed">
+            {description
+              ? description.slice(0, DESCRIPTION_LEN_MAX) +
+                (description.length > DESCRIPTION_LEN_MAX ? '…' : '')
+              : 'No description available.'}
+          </p>
 
           {/* Price */}
           <div className="flex items-end gap-3">
@@ -183,7 +178,7 @@ export default function Productdetails({ product }: { product: productItems }) {
                   {formatPrice(discountedPrice)}
                 </span>
                 <span className="text-lg line-through text-gray-400">
-                {formatPrice(price)}
+                  {formatPrice(price)}
                 </span>
                 <span className="px-2 py-0.5 bg-red-500 text-white font-medium text-sm rounded-md">
                   -{discount}%
@@ -191,13 +186,13 @@ export default function Productdetails({ product }: { product: productItems }) {
               </>
             ) : (
               <span className="text-3xl font-bold text-gray-800">
-              {formatPrice(price)}
+                {formatPrice(price)}
               </span>
             )}
           </div>
 
           {/* Stock */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
             <span
               className={`text-xs font-medium px-2.5 py-1 rounded-md ${
                 isAvailable
@@ -261,18 +256,21 @@ export default function Productdetails({ product }: { product: productItems }) {
                             }
                           }}
                           onKeyDown={(e) => {
-                            if (e.key === 'Enter' || e.key === ' ')
-                              setSelectedColor(attr.value);
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              if (!isAlreadyInCart?.color) {
+                                setSelectedColor(attr.value);
+                              }
+                            }
                           }}
-                          className={`w-7 h-7 rounded-full transition 
+                          className={`w-7 h-7 rounded-full transition outline-none
                             ${
                               isAlreadyInCart?.color
-                                ? 'cursor-text'
+                                ? 'cursor-not-allowed opacity-70'
                                 : 'cursor-pointer'
                             }
                             ${
                               selectedColor === attr.value
-                                ? 'outline-none ring-2 ring-offset-1 ring-gray-400'
+                                ? 'ring-2 ring-offset-1 ring-gray-400'
                                 : ''
                             }`}
                           style={{ backgroundColor: attr.value }}
@@ -317,13 +315,16 @@ export default function Productdetails({ product }: { product: productItems }) {
                           }}
                           aria-disabled={!!isAlreadyInCart?.size}
                           onKeyDown={(e) => {
-                            if (e.key === 'Enter' || e.key === ' ')
-                              setSelectedSize(attr.value);
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              if (!isAlreadyInCart?.size) {
+                                setSelectedSize(attr.value);
+                              }
+                            }
                           }}
-                          className={`px-3 py-1.5 rounded-md border-2 text-xs md:text-sm font-semibold uppercase transition
+                          className={`px-3 py-1.5 rounded-md border-2 text-xs md:text-sm font-semibold uppercase transition outline-none
                             ${
                               isAlreadyInCart?.size
-                                ? 'cursor-text'
+                                ? 'cursor-not-allowed opacity-70'
                                 : 'cursor-pointer hover:border-gray-400'
                             }
                             ${
@@ -354,7 +355,7 @@ export default function Productdetails({ product }: { product: productItems }) {
                     variant="secondary"
                     className="hover:bg-gray-200 cursor-pointer"
                   >
-                    <Minus className="w-4 h-4 " />
+                    <Minus className="w-4 h-4" />
                   </Button>
                   <span className="text-lg font-semibold w-10 text-center">
                     {isAlreadyInCart.quantity}
@@ -369,26 +370,49 @@ export default function Productdetails({ product }: { product: productItems }) {
                   </Button>
                 </div>
                 <div className="mt-5">
-                  <Button variant="default" className="cursor-pointer">
+                  <Button asChild variant="default" className="cursor-pointer w-full sm:w-auto">
                     <Link href="/checkout">Checkout</Link>
                   </Button>
                 </div>
               </div>
             ) : (
-              <div className="grid grid-cols-4 gap-2 w-fit">
+              <div className="flex flex-wrap items-center gap-3">
+                {/* Quantity stepper */}
+                <div className="flex items-center border border-gray-200 rounded-md">
+                  <button
+                    type="button"
+                    onClick={handleQtyDecrement}
+                    disabled={qty <= 1}
+                    className="p-2 cursor-pointer text-gray-600 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition rounded-l-md"
+                  >
+                    <Minus className="w-4 h-4" />
+                  </button>
+                  <span className="w-10 text-center text-sm font-semibold">{qty}</span>
+                  <button
+                    type="button"
+                    onClick={handleQtyIncrement}
+                    disabled={qty >= stock}
+                    className="p-2 cursor-pointer text-gray-600 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition rounded-r-md"
+                  >
+                    <Plus className="w-4 h-4" />
+                  </button>
+                </div>
+
                 <Button
                   onClick={handleAddToCart}
                   variant="default"
                   disabled={!isAvailable || variantMissing}
-                  className="flex items-center col-span-3 gap-2 cursor-pointer"
+                  className="flex items-center gap-2 cursor-pointer flex-1 sm:flex-none"
                 >
                   <ShoppingBasket className="w-5 h-5" />
                   {variantMissing ? 'Select options' : 'Add to Cart'}
                 </Button>
+
                 <Button
                   onClick={() => wishStore.toggle(product)}
                   variant="outline"
-                  className="flex items-center col-span-1 justify-center cursor-pointer"
+                  size="icon"
+                  className="cursor-pointer shrink-0"
                   title={
                     isAlreadyInWish
                       ? 'Remove from wishlist'
