@@ -293,7 +293,7 @@ export default function CartsMenu() {
                 <ul className="space-y-2 max-h-48 overflow-auto">
                   {wishlist.map((item) => (
                     <li
-                      key={item.id ?? item}
+                      key={typeof item === 'string' ? item : String(item.id)}
                       className="flex items-center justify-between"
                     >
                       <div className="text-sm text-gray-800">
@@ -303,7 +303,8 @@ export default function CartsMenu() {
                         <button
                           className="text-xs text-rose-600 hover:underline cursor-pointer"
                           onClick={() => {
-                            handleRemoveFromWishlist(item.id ?? item);
+                            const id = typeof item === 'string' ? item : item.id;
+                            if (id) handleRemoveFromWishlist(String(id));
                           }}
                         >
                           Remove
