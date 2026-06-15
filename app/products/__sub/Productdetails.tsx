@@ -112,7 +112,8 @@ export default function Productdetails({ product }: { product: productItems }) {
                 <Skeleton className="absolute inset-0 rounded-xl" />
               )}
               <Lens lensSize={200} zoomFactor={2} duration={0.2}>
-                <Image
+                <img src={imageUrl} alt={name} className="w-full h-full object-contain" />
+                {/* <Image
                   src={imageUrl }
                   alt={name}
                   fill
@@ -123,7 +124,7 @@ export default function Productdetails({ product }: { product: productItems }) {
                   
                   onLoad={() => setImgLoaded(true)}
                   onError={() => setImgLoaded(true)}
-                />
+                /> */}
               </Lens>
             </div>
           </div>
